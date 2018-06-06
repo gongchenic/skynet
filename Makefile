@@ -47,7 +47,7 @@ update3rd :
 CSERVICE = snlua logger gate harbor
 LUA_CLIB = skynet \
   client \
-  bson md5 sproto lpeg
+  bson md5 sproto lpeg protobuf skiplist
 
 LUA_CLIB_SKYNET = \
   lua-skynet.c lua-seri.c \
@@ -107,8 +107,14 @@ $(LUA_CLIB_PATH)/client.so : lualib-src/lua-clientsocket.c lualib-src/lua-crypt.
 $(LUA_CLIB_PATH)/sproto.so : lualib-src/sproto/sproto.c lualib-src/sproto/lsproto.c | $(LUA_CLIB_PATH)
 	$(CC) $(CFLAGS) $(SHARED) -Ilualib-src/sproto $^ -o $@ 
 
+$(LUA_CLIB_PATH)/protobuf.so : lualib-src/pbc/binding/lua53/pbc-lua53.c | $(LUA_CLIB_PATH)
+	$(CC) $(CFLAGS) $(SHARED) -Ilualib-src/pbc -Llualib-src/pbc/build $^ -o $@ -lpbc
+
 $(LUA_CLIB_PATH)/lpeg.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c 3rd/lpeg/lptree.c 3rd/lpeg/lpvm.c | $(LUA_CLIB_PATH)
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@ 
+
+$(LUA_CLIB_PATH)/skiplist.so : lualib-src/zset/skiplist.h lualib-src/zset/skiplist.c lualib-src/zset/lua-skiplist.c | $(LUA_CLIB_PATH)
+	$(CC) $(CFLAGS) $(SHARED) $^ -o $@
 
 clean :
 	rm -f $(SKYNET_BUILD_PATH)/skynet $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
