@@ -13,7 +13,7 @@
 ##### Build defaults #####
 LUA_VERSION =       5.1
 TARGET =            cjson.so
-PREFIX =            /data/gameserver/tcg/3rd/lua
+PREFIX =            ../../3rd/lua
 #CFLAGS =            -g -Wall -pedantic -fno-inline
 CFLAGS =            -g -O3 -Wall -pedantic -DNDEBUG
 CJSON_CFLAGS =      -fpic

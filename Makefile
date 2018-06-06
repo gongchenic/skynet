@@ -2,6 +2,7 @@ include platform.mk
 
 LUA_CLIB_PATH ?= luaclib
 CSERVICE_PATH ?= cservice
+LUA_CSRC_PATH ?= lualib-src
 
 SKYNET_BUILD_PATH ?= .
 
@@ -72,9 +73,19 @@ SKYNET_SRC = skynet_main.c skynet_handle.c skynet_module.c skynet_mq.c \
   malloc_hook.c skynet_daemon.c skynet_log.c
 
 all : \
+  pbc \
+  cjson \
   $(SKYNET_BUILD_PATH)/skynet \
   $(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
   $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so) 
+
+pbc : lualib-src/pbc/Makefile
+	cd lualib-src/pbc && $(MAKE)
+
+cjson : lualib-src/cjson/Makefile
+	cd lualib-src/cjson && $(MAKE)
+	mv *.o ../../luaclib/
+	mv cjson.so ../../luaclib/
 
 $(SKYNET_BUILD_PATH)/skynet : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) $(LUA_LIB) $(MALLOC_STATICLIB)
 	$(CC) $(CFLAGS) -o $@ $^ -Iskynet-src -I$(JEMALLOC_INC) $(LDFLAGS) $(EXPORT) $(SKYNET_LIBS) $(SKYNET_DEFINES)
