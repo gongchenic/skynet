@@ -38,6 +38,8 @@ else
 	local p = string.match(pattern, "(.*/).+$")
 	SERVICE_PATH = p
 end
+package.path = "./server/?.lua;" .. package.path
+package.path = "./config/?.lua;" .. package.path
 
 if LUA_PRELOAD then
 	local f = assert(loadfile(LUA_PRELOAD))
