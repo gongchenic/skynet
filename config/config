@@ -1,0 +1,17 @@
+root = "./"
+thread = 4
+logger = "./log/skynet.log"
+harbor = 0
+start = "main"
+bootstrap = "snlua bootstrap"
+luaservice = root.."server/?.lua;"..root.."service/?.lua;"..root.."test/?.lua"
+lualoader = "lualib/loader.lua"
+snax = root.."server/?.lua;"..root.."test/?.lua"
+cpath = root.."cservice/?.so"
+daemon = "./log/skynet.pid"
+cluster = "./config/clustername.lua"
+clustername = "serverc"
+environment = "test"
+websocketport = 9101
+httpport = 9102
+debugport = 9103
