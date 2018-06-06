@@ -12,6 +12,6 @@ daemon = "./log/skynet.pid"
 cluster = "./config/clustername.lua"
 clustername = "serverc"
 environment = "test"
-websocketport = 9101
+socketport = 9101
 httpport = 9102
 debugport = 9103
