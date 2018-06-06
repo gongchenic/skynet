@@ -21,11 +21,6 @@
 #define PBC_UNKNOWN 12
 #define PBC_REPEATED 128
 
-#ifdef _MSC_VER
-typedef enum { false = 0,
-	       true = !false } bool;
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -97,14 +97,14 @@ void
 _pbcV_dezigzag64(struct longlong *r)
 {
 	uint32_t low = r->low;
-	r->low = ((low >> 1) | ((r->hi & 1) << 31)) ^ - ((int32_t)(low & 1));
-	r->hi = (r->hi >> 1) ^ - ((int32_t)(low & 1));
+	r->low = ((low >> 1) | ((r->hi & 1) << 31)) ^ - (low & 1);
+	r->hi = (r->hi >> 1) ^ - (low & 1);
 }
 
 void
 _pbcV_dezigzag32(struct longlong *r)
 {
 	uint32_t low = r->low;
-	r->low = (low >> 1) ^ -((int32_t)(low & 1));
-	r->hi = -((int32_t)(low & 1));
+	r->low = (low >> 1) ^ - (low & 1);
+	r->hi = -(low >> 31);
 }

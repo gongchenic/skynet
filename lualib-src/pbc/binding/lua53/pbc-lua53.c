@@ -35,13 +35,10 @@ checkuserdata(lua_State *L, int index) {
 	return ud;
 }
 
-static struct pbc_env * share_env;
 static int
 _env_new(lua_State *L) {
-	if(share_env==NULL){
-		share_env = pbc_new();
-	}
-	lua_pushlightuserdata(L, share_env);
+	struct pbc_env * env = pbc_new();
+	lua_pushlightuserdata(L, env);
 	return 1;
 }
 
@@ -819,7 +816,7 @@ _clear_gcobj(lua_State *L) {
 	obj->pat = NULL;
 	obj->msg = NULL;
 	if (obj->env) {
-		//pbc_delete(obj->env);
+		pbc_delete(obj->env);
 		obj->env = NULL;
 	}
 
@@ -871,7 +868,7 @@ _add_rmessage(lua_State *L) {
 	return 0;
 }
 
-LUA_API int
+int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
 		{"_env_new" , _env_new },
