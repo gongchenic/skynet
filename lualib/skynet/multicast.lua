@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local mc = require "multicast.core"
+local mc = require "skynet.multicast.core"
 
 local multicastd
 local multicast = {}
@@ -73,6 +73,8 @@ function chan:unsubscribe()
 end
 
 local function dispatch_subscribe(channel, source, pack, msg, sz)
+	-- channel as session, do need response
+	skynet.ignoreret()
 	local self = dispatch[channel]
 	if not self then
 		mc.close(pack)

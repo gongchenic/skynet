@@ -1,6 +1,6 @@
 local skynet = require "skynet"
-local socket = require "socket"
-local socketdriver = require "socketdriver"
+local socket = require "skynet.socket"
+local socketdriver = require "skynet.socketdriver"
 
 -- channel support auto reconnect , and capture socket error in request/response transaction
 -- { host = "", port = , auth = function(so) , response = function(so) session, data }
@@ -153,31 +153,42 @@ local function push_response(self, response, co)
 	end
 end
 
+local function get_response(func, sock)
+	local result_ok, result_data, padding = func(sock)
+	if result_ok and padding then
+		local result = { result_data }
+		local index = 2
+		repeat
+			result_ok, result_data, padding = func(sock)
+			if not result_ok then
+				return result_ok, result_data
+			end
+			result[index] = result_data
+			index = index + 1
+		until not padding
+		return true, result
+	else
+		return result_ok, result_data
+	end
+end
+
 local function dispatch_by_order(self)
 	while self.__sock do
 		local func, co = pop_response(self)
 		if not co then
 			-- close signal
-			wakeup_all(self, errmsg)
+			wakeup_all(self, "channel_closed")
 			break
 		end
-		local ok, result_ok, result_data, padding = pcall(func, self.__sock)
+		local ok, result_ok, result_data = pcall(get_response, func, self.__sock)
 		if ok then
-			if padding and result_ok then
-				-- if padding is true, wait for next result_data
-				-- self.__result_data[co] is a table
-				local result = self.__result_data[co] or {}
-				self.__result_data[co] = result
-				table.insert(result, result_data)
+			self.__result[co] = result_ok
+			if result_ok and self.__result_data[co] then
+				table.insert(self.__result_data[co], result_data)
 			else
-				self.__result[co] = result_ok
-				if result_ok and self.__result_data[co] then
-					table.insert(self.__result_data[co], result_data)
-				else
-					self.__result_data[co] = result_data
-				end
-				skynet.wakeup(co)
+				self.__result_data[co] = result_data
 			end
+			skynet.wakeup(co)
 		else
 			close_channel_socket(self)
 			local errmsg
@@ -289,6 +300,12 @@ end
 
 local function check_connection(self)
 	if self.__sock then
+		if socket.disconnected(self.__sock[1]) then
+			-- closed by peer
+			skynet.error("socket: disconnect detected ", self.__host, self.__port)
+			close_channel_socket(self)
+			return
+		end
 		local authco = self.__authcoroutine
 		if not authco then
 			return true
@@ -376,6 +393,12 @@ end
 local socket_write = socket.write
 local socket_lwrite = socket.lwrite
 
+local function sock_err(self)
+	close_channel_socket(self)
+	wakeup_all(self)
+	error(socket_error)
+end
+
 function channel:request(request, response, padding)
 	assert(block_connect(self, true))	-- connect once
 	local fd = self.__sock[1]
@@ -383,16 +406,18 @@ function channel:request(request, response, padding)
 	if padding then
 		-- padding may be a table, to support multi part request
 		-- multi part request use low priority socket write
-		-- socket_lwrite returns nothing
-		socket_lwrite(fd , request)
+		-- now socket_lwrite returns as socket_write
+		if not socket_lwrite(fd , request) then
+			sock_err(self)
+		end
 		for _,v in ipairs(padding) do
-			socket_lwrite(fd, v)
+			if not socket_lwrite(fd, v) then
+				sock_err(self)
+			end
 		end
 	else
 		if not socket_write(fd , request) then
-			close_channel_socket(self)
-			wakeup_all(self)
-			error(socket_error)
+			sock_err(self)
 		end
 	end
 
